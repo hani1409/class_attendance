@@ -1,0 +1,126 @@
+from openpyxl import load_workbook
+
+
+class Family(object):
+    def __init__(self, **kwargs):
+        self.timeStamp = kwargs['Timestamp']
+        self.name = kwargs['Name']
+        self.address = kwargs['HomeAddress']
+        self.homePhone = kwargs['HomePhoneNumber']
+        self.mobile = kwargs['MobileNumber']
+        self.email = kwargs['EmailAddress']
+
+        self.spouseName = kwargs['SpouseName']
+        self.spouseEmail = kwargs['SpouseEmail']
+        self.spouseMobile = kwargs['SpouseMobile']
+
+        self.child1Name = kwargs['Child1Name']
+        self.child1DOB = kwargs['Child1DOB']
+        self.child1Mobile = kwargs['Child1Mobile']
+
+        self.child2Name = kwargs['Child2Name']
+        self.child2DOB = kwargs['Child2DOB']
+        self.child2Mobile = kwargs['Child2Mobile']
+
+        self.child3Name = kwargs['Child3Name']
+        self.child3DOB = kwargs['Child3DOB']
+        self.child3Mobile = kwargs['Child3Mobile']
+
+        self.child4Name = kwargs['Child4Name']
+        self.child4DOB = kwargs['Child4DOB']
+        self.child4Mobile = kwargs['Child4Mobile']
+
+    def list_family(self):
+        header = ['Address',
+                  'spouse1Name',  'spouse1Mobile', 'spouse1Email',
+                  'spouse2Name',  'spouse2Mobile', 'spouse2Email',
+                  'child1Name',   'child1Mobile',  'child1DOB',
+                  'child2Name',   'child2Mobile',  'child2DOB',
+                  'child3Name',   'child3Mobile',  'child3DOB',
+                  'child4Name',   'child4Mobile',  'child4DOB',
+                  ]
+        family_list = [self.address,
+                       self.name,       self.email,        self.mobile,
+                       self.spouseName, self.spouseMobile, self.spouseEmail,
+                       self.child1Name, self.child1Mobile, self.child1DOB,
+                       self.child2Name, self.child2Mobile, self.child2DOB,
+                       self.child3Name, self.child3Mobile, self.child3DOB,
+                       self.child4Name, self.child4Mobile, self.child4DOB]
+
+        return zip(header, family_list)
+
+def detect_dub(families):
+    address = []
+    spouse1 = []
+    spouse2 = []
+
+    new_families = families
+
+    for family in families:
+        address.append(family.address)
+        spouse1.append(family.name)
+        spouse2.append(family.spouseName)
+
+        if address.count(family.address) >= 2:
+            print('This address may have more then one entry: %s' % family.address)
+            if family.name in spouse2:
+                print('%s was entered two times, removing this entry' % family.name)
+                new_families.remove(family)
+            if spouse1.count(family.name) >= 2:
+                print('%s was entered 2 times, tell him now to add himself again' % family.name)
+                new_families.remove(family)
+
+    return new_families
+
+
+def read_sheet(name):
+    wb = load_workbook(name, read_only=True)
+    ws = wb['sample contact']
+    return wb, ws
+
+
+def close_wb(wb):
+    wb.close()
+
+
+def get_header(ws):
+    return [cell.value for cell in ws[1]]
+
+
+def get_family_list(ws):
+    header = get_header(ws)
+
+    people = []
+
+    for row in ws.iter_rows(None, 2):
+        values = {}
+        for key, cell in zip(header, row):
+            values[key] = None if cell.value == 'N/A' else cell.value
+        family = Family(**values)
+        people.append(family)
+
+    return people
+
+
+def main():
+    sheet_name = 'C:\\Users\\haniz\\Desktop\\sample contact5.xlsx'
+
+    wb, ws = read_sheet(sheet_name)
+
+    people = get_family_list(ws)
+
+    new_families = detect_dub(people)
+
+    #for family in new_families:
+        #print('')
+        #print('*'*100)
+        #print('')
+        #family_info = family.list_family()
+        #for item in family_info:
+          #  print('%s' % str(item))
+
+    close_wb(wb)
+
+
+if __name__ == '__main__':
+    main()
